@@ -1,0 +1,40 @@
+{
+  "name": "twoway",
+  "version": "0.0.1",
+  "description": "Library for creating frameworks such as vue.js.",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "rollup --config rollup.config.js",
+    "dev": "npm run build && npx nodemon test/dev.js"
+  },
+  "keywords": [
+    "two way binding"
+  ],
+  "author": "JeHwan Yoo <yoojehwan1875@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^19.0.0",
+    "@rollup/plugin-json": "^4.1.0",
+    "@rollup/plugin-node-resolve": "^13.0.0",
+    "@rollup/plugin-typescript": "^8.2.1",
+    "@types/acorn": "^4.0.5",
+    "@types/sanitize-html": "^2.3.1",
+    "express": "^4.17.1",
+    "nodemon": "^2.0.9",
+    "rollup": "^2.52.7",
+    "rollup-plugin-terser": "^7.0.2",
+    "typescript": "^4.3.5"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JeHwanYoo/twoway.js"
+  },
+  "bugs": {
+    "url": "https://github.com/JeHwanYoo/twoway.js/issues"
+  },
+  "homepage": "https://github.com/JeHwanYoo/twoway.js",
+  "dependencies": {
+    "handlebars": "^4.7.7",
+    "htmlparser2": "^6.1.0"
+  }
+}
