@@ -11,7 +11,19 @@ class Observable<T> {
   }
 }
 
-const StateUpdated = new Event('StateUpdated')
+export interface Detail {
+  stateName: string
+  stateValue: any
+}
+
+const detail: Detail = {
+  stateName: '',
+  stateValue: null,
+}
+
+const StateUpdated = new CustomEvent('StateUpdated', {
+  detail,
+})
 
 export class State {
   constructor(context: Record<string, any>) {
@@ -32,6 +44,8 @@ export class State {
       set(target, prop, value) {
         if (target[prop.toString()]) {
           target[prop.toString()].value = value
+          detail.stateName = prop.toString()
+          detail.stateValue = value
           document.dispatchEvent(StateUpdated)
           return true
         } else {

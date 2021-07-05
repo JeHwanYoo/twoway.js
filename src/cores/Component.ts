@@ -2,8 +2,7 @@ import { State } from './State'
 import { compile } from 'handlebars'
 import { isObjectEmpty } from '../lib'
 import { paramCase } from 'param-case'
-import cheerio, { CheerioAPI } from 'cheerio'
-import randomstring from 'randomstring'
+import cheerio, { CheerioAPI, Element } from 'cheerio'
 
 type Method = (component: Component) => void
 
@@ -24,12 +23,13 @@ export class Component {
   components: Record<string, Component> = {}
   methods: Record<string, Method> = {}
   $: CheerioAPI
+  inputList: {
+    modelName: string
+    modelEl: Element
+  }[]
   constructor(source: string, configuration?: Configuration) {
     // Set the name
-    // while () {}
-    // console.log(methodMap[(this.name = randomstring.generate(10))])
-    // console.log(!!methodMap[(this.name = randomstring.generate(10))])
-    this.name = 'foo'
+    while (methodMap[(this.name = makeid(10))]) {}
     // Set the source
     this.source = source
     // Set the states
@@ -72,14 +72,38 @@ export class Component {
       const node = this.$(k)
       node.replaceWith(v.compile(node.attr()).html())
     })
-    Object.entries(this.methods).forEach(([k, v]) => {
+    // Event Mapping
+    Object.entries(this.methods).forEach(([k]) => {
       const nodes = this.$(`[@click=${k}]`)
       nodes.each((i, el) => {
         this.$(el).attr('onclick', `Twoway.methodMap['${this.name}']['${k}']()`)
         this.$(el).removeAttr('@click')
       })
     })
+    // Two-way Binding
+    Object.entries(this.state).forEach(([k, v]) => {
+      const nodes = this.$(`input[t-model=${k}]`)
+      this.inputList = []
+      nodes.each((i, el) => {
+        this.$(el).val(v)
+        this.inputList.push({
+          modelName: el.attribs['t-model'],
+          modelEl: el,
+        })
+      })
+    })
     // return CheerioAPI
     return this.$
   }
+}
+
+function makeid(length) {
+  var result = ''
+  var characters =
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  var charactersLength = characters.length
+  for (var i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength))
+  }
+  return result
 }

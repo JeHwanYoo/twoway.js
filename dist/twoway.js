@@ -10,7 +10,13 @@
         this._value = newValue;
     }
 }
-const StateUpdated = new Event('StateUpdated');
+const detail = {
+    stateName: '',
+    stateValue: null,
+};
+const StateUpdated = new CustomEvent('StateUpdated', {
+    detail,
+});
 class State {
     constructor(context) {
         const _data = {};
@@ -31,6 +37,8 @@ class State {
             set(target, prop, value) {
                 if (target[prop.toString()]) {
                     target[prop.toString()].value = value;
+                    detail.stateName = prop.toString();
+                    detail.stateValue = value;
                     document.dispatchEvent(StateUpdated);
                     return true;
                 }
@@ -29775,12 +29783,10 @@ class Component {
     components = {};
     methods = {};
     $;
+    inputList;
     constructor(source, configuration) {
         // Set the name
-        // while () {}
-        // console.log(methodMap[(this.name = randomstring.generate(10))])
-        // console.log(!!methodMap[(this.name = randomstring.generate(10))])
-        this.name = 'foo';
+        while (methodMap[(this.name = makeid(10))]) { }
         // Set the source
         this.source = source;
         // Set the states
@@ -29823,28 +29829,68 @@ class Component {
             const node = this.$(k);
             node.replaceWith(v.compile(node.attr()).html());
         });
-        Object.entries(this.methods).forEach(([k, v]) => {
+        // Event Mapping
+        Object.entries(this.methods).forEach(([k]) => {
             const nodes = this.$(`[@click=${k}]`);
             nodes.each((i, el) => {
                 this.$(el).attr('onclick', `Twoway.methodMap['${this.name}']['${k}']()`);
                 this.$(el).removeAttr('@click');
             });
         });
+        // Two-way Binding
+        Object.entries(this.state).forEach(([k, v]) => {
+            const nodes = this.$(`input[t-model=${k}]`);
+            this.inputList = [];
+            nodes.each((i, el) => {
+                this.$(el).val(v);
+                this.inputList.push({
+                    modelName: el.attribs['t-model'],
+                    modelEl: el,
+                });
+            });
+        });
         // return CheerioAPI
         return this.$;
     }
+}
+function makeid(length) {
+    var result = '';
+    var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var charactersLength = characters.length;
+    for (var i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    return result;
 }class Renderer {
     rootComponent;
     constructor(rootComponent) {
         this.rootComponent = rootComponent;
-        document.addEventListener('DOMContentLoaded', () => this.update());
-        document.addEventListener('StateUpdated', () => this.update());
+        document.addEventListener('DOMContentLoaded', () => this.start());
+        document.addEventListener('StateUpdated', evt => this.update(evt.detail));
     }
     get html() {
         return this.rootComponent.$.html();
     }
-    update() {
+    start() {
         this.rootComponent.compile();
         document.body.innerHTML = this.rootComponent.$.html();
+        // Two-way Binding
+        this.rootComponent.inputList.forEach(v => {
+            const elements = document.querySelectorAll(`input[t-model=${v.modelName}]`);
+            elements.forEach(el => {
+                el.addEventListener('input', evt => {
+                    const input = el;
+                    this.rootComponent.state[v.modelName] = input.value;
+                });
+                const input = el;
+                const initVal = input.value;
+                el.removeAttribute('value');
+                el.removeAttribute('t-model');
+                input.value = initVal;
+            });
+        });
+    }
+    update(detail) {
+        console.log(detail);
     }
 }exports.Component=Component;exports.Renderer=Renderer;exports.State=State;exports.methodMap=methodMap;Object.defineProperty(exports,'__esModule',{value:true});})));//# sourceMappingURL=twoway.js.map
