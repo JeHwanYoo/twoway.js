@@ -12,16 +12,26 @@ const Person = new Component(
 const application = new Component(
   `
     <person name="{{ name }}" age="{{ age }}"></person>
+    <div>
+      <input placeholder="input your name" type="text" t-model="name" />
+      <input placeholder="input your age" type="number" t-model="age" />
+      <button onclick="wow()">hello</button>
+    </div>
   `,
   {
     components: {
       Person,
     },
-    model: {
+    states: {
       name: 'James',
       age: 26,
     },
   },
 )
+
+function wow() {
+  application.states.age = 28
+  console.log(application.states.age)
+}
 
 renderer.render(application)
