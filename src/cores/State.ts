@@ -11,6 +11,8 @@ class Observable<T> {
   }
 }
 
+const StateUpdated = new Event('StateUpdated')
+
 export class State {
   constructor(context: Record<string, any>) {
     const _data: Record<string, any> = {}
@@ -30,6 +32,7 @@ export class State {
       set(target, prop, value) {
         if (target[prop.toString()]) {
           target[prop.toString()].value = value
+          document.dispatchEvent(StateUpdated)
           return true
         } else {
           console.error(`${prop.toString()} is not a registered state.`)

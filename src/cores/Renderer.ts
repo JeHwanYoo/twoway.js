@@ -1,14 +1,17 @@
 import { Component } from './Component'
 
 export class Renderer {
-  rootElement: HTMLElement
-  children: Record<string, Component> = {}
-
-  constructor(rootID: string) {
-    this.rootElement = document.getElementById(rootID)
+  rootComponent: Component
+  constructor(rootComponent: Component) {
+    this.rootComponent = rootComponent
+    document.addEventListener('DOMContentLoaded', () => this.update())
+    document.addEventListener('StateUpdated', () => this.update())
   }
-
-  render(rootComponent: Component) {
-    this.rootElement.innerHTML = rootComponent.compile()
+  get html(): string {
+    return this.rootComponent.$.html()
+  }
+  update() {
+    this.rootComponent.compile()
+    document.body.innerHTML = this.rootComponent.$.html()
   }
 }

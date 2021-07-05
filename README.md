@@ -49,28 +49,42 @@ Props is a one-way data binding. The parent component passes it to the child com
 Props uses a '$' symbol to distinguish them from common models.
 
 ```javascript
-const Person = new Component(
+const Counter = new Component(
   `
-    <div>name: {{ $name }}</div>
-    <div>age: {{ $age }}</div>
+    <div>count {{ $count }}</div>
   `,
 )
 
 const application = new Component(
   `
-    <person name="{{ name }}" age="{{ age }}"></person>
+    <counter count="{{ count }}"></counter>
+    <div>
+      <button @click="minusCount">minus count</button>
+      <button @click="plusCount">plus count</button>
+    </div>
   `,
   {
     components: {
-      Person,
+      Counter,
     },
-    states: {
-      name: 'James',
-      age: 26,
+    state: {
+      count: 0,
+    },
+    methods: {
+      plusCount(state) {
+        state.age++
+      },
+      minusCount(state) {
+        state.age--
+      },
     },
   },
 )
 ```
+
+> Question!) Is the update by the button one-way binding?
+>
+> Yes. This is because data updates are actually done in the ViewModel.
 
 ### two-way binding
 

@@ -1,37 +1,35 @@
 const { Renderer, Component } = Twoway
 
-const renderer = new Renderer('app')
-
-const Person = new Component(
+const Counter = new Component(
   `
-    <div>name: {{ $name }}</div>
-    <div>age: {{ $age }}</div>
+    <div>count {{ $count }}</div>
   `,
 )
 
 const application = new Component(
   `
-    <person name="{{ name }}" age="{{ age }}"></person>
+    <counter count="{{ count }}"></counter>
     <div>
-      <input placeholder="input your name" type="text" t-model="name" />
-      <input placeholder="input your age" type="number" t-model="age" />
-      <button onclick="wow()">hello</button>
+      <button @click="minusCount">minus count</button>
+      <button @click="plusCount">plus count</button>
     </div>
   `,
   {
     components: {
-      Person,
+      Counter,
     },
-    states: {
-      name: 'James',
-      age: 26,
+    state: {
+      count: 0,
+    },
+    methods: {
+      plusCount(state) {
+        state.count++
+      },
+      minusCount(state) {
+        state.count--
+      },
     },
   },
 )
 
-function wow() {
-  application.states.age = 28
-  console.log(application.states.age)
-}
-
-renderer.render(application)
+new Renderer(application)
