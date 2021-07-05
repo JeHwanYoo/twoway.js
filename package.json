@@ -1,6 +1,6 @@
 {
   "name": "twoway",
-  "version": "0.0.1",
+  "version": "0.0.1-alpha",
   "description": "Library for creating frameworks such as vue.js.",
   "main": "dist/index.js",
   "scripts": {
@@ -34,7 +34,9 @@
   },
   "homepage": "https://github.com/JeHwanYoo/twoway.js",
   "dependencies": {
+    "camelcase": "^5.3.1",
+    "cheerio": "^1.0.0-rc.10",
     "handlebars": "^4.7.7",
-    "htmlparser2": "^6.1.0"
+    "param-case": "^3.0.4"
   }
 }

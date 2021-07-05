@@ -7,18 +7,13 @@ const Person = new Component(
     <div>name: {{ $name }}</div>
     <div>age: {{ $age }}</div>
   `,
-  {
-    name: 'NameBox',
-    props: ['name', 'age'],
-  },
 )
 
 const application = new Component(
   `
-   {{{component Person name age}}}
+    <person name="{{ name }}" age="{{ age }}"></person>
   `,
   {
-    name: 'application',
     components: {
       Person,
     },
@@ -29,4 +24,4 @@ const application = new Component(
   },
 )
 
-renderer.renders(application)
+renderer.render(application)

@@ -8,7 +8,7 @@ export class Renderer {
     this.rootElement = document.getElementById(rootID)
   }
 
-  renders(rootComponent: Component) {
+  render(rootComponent: Component) {
     this.rootElement.innerHTML = rootComponent.compile()
   }
 }
