@@ -1,4 +1,4 @@
-const { Renderer, Model, Component } = Twoway
+const { Renderer, Component } = Twoway
 
 const renderer = new Renderer('app')
 
@@ -18,14 +18,14 @@ const application = new Component(
    {{{component Person name age}}}
   `,
   {
-    name: 'appLayout',
+    name: 'application',
     components: {
       Person,
     },
-    model: new Model({
+    model: {
       name: 'James',
       age: 26,
-    }),
+    },
   },
 )
 
