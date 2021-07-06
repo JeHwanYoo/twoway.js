@@ -8134,7 +8134,6 @@ class Component {
                             const childComponent = this.components[el.origin.tagName.toLocaleLowerCase()];
                             props['eventName'] = childComponent.name;
                             gEventBus.emit(`PropsUpdate-${props['eventName']}`, props);
-                            // el.current.innerHTML = childComponent.wrapper.outerHTML
                             const clone = childComponent.wrapper.cloneNode(true);
                             el.current.replaceWith(clone);
                             el.current = clone;

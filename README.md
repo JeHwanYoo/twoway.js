@@ -17,6 +17,8 @@ For interpolation, we used a popular library called handlebars.
 View components are designed as mvvm and have ViewModels.
 
 ```javascript
+const { Renderer, Component } = Twoway
+
 const application = new Component(
   // View Part
   `
@@ -34,6 +36,8 @@ const application = new Component(
     },
   },
 )
+
+new Renderer(application)
 ```
 
 The ViewModel communicates with the View, notifying the View of data changes.
@@ -55,7 +59,9 @@ t-attribute is a two-way.js grammar. (ex, t-click, t-model)
 Usually, other frameworks seem to be called directives.
 
 ```javascript
-const Counter = new Component(
+const { Renderer, Component } = Twoway
+
+const counter = new Component(
   `
     <div>count {{ $count }}</div>
   `,
@@ -71,7 +77,7 @@ const application = new Component(
   `,
   {
     components: {
-      Counter,
+      counter,
     },
     state: {
       count: 0,
@@ -86,6 +92,8 @@ const application = new Component(
     },
   },
 )
+
+new Renderer(application)
 ```
 
 > Question) Is the update by the button one-way binding?
@@ -97,8 +105,54 @@ const application = new Component(
 This is the way to update the ViewModel from the View. Of course, props cannot be used.
 
 ```javascript
+const { Renderer, Component } = Twoway
 
+const counter = new Component(
+  `
+    <div>
+      count {{ $count }}
+    </div>
+  `,
+)
+
+const application = new Component(
+  `
+    <div class="wrapper">
+      <counter count="{{ count }}"></counter>
+      <div class="button">
+        <button t-click="minusCount">minus count</button>
+        <button t-click="plusCount">plus count</button>
+      </div>
+      <br />
+      <div class="text-display">
+        <div> {{ text }} </div>
+        <input type="text" t-model="text" />
+      </div>
+    </div>
+  `,
+  {
+    components: {
+      counter,
+    },
+    state: {
+      count: 0,
+      text: 'bind with input!',
+    },
+    methods: {
+      plusCount(state) {
+        state.count++
+      },
+      minusCount(state) {
+        state.count--
+      },
+    },
+  },
+)
+
+new Renderer(application)
 ```
+
+You can change the state with the value of the input using the t-model property.
 
 ## Test
 
