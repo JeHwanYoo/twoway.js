@@ -1,6 +1,6 @@
 const { Renderer, Component } = Twoway
 
-const Counter = new Component(
+const counter = new Component(
   `
     <div>count {{ $count }}</div>
   `,
@@ -8,20 +8,22 @@ const Counter = new Component(
 
 const application = new Component(
   `
-    <counter count="{{ count }}"></counter>
-    <div>
-      <button @click="minusCount">minus count</button>
-      <button @click="plusCount">plus count</button>
-    </div>
-    <br />
-    <div>
-      <div> {{ text }} </div>
-      <input type="text" t-model="text" />
+    <div class="wrapper">
+      <counter count="{{ count }}"></counter>
+      <div>
+        <button t-click="minusCount">minus count</button>
+        <button t-click="plusCount">plus count</button>
+      </div>
+      <br />
+      <div>
+        <div> {{ text }} </div>
+        <input type="text" t-model="text" />
+      </div>
     </div>
   `,
   {
     components: {
-      Counter,
+      counter,
     },
     state: {
       count: 0,

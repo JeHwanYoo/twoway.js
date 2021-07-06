@@ -5,8 +5,7 @@
  */
 export function isObjectEmpty(object: Object | undefined | null) {
   return (
-    object === undefined ||
-    object === null ||
+    isUndefindOrNull(object) ||
     (Object.keys(object).length === 0 && object.constructor === Object)
   )
 }
@@ -17,5 +16,9 @@ export function isObjectEmpty(object: Object | undefined | null) {
  * @returns { boolean } if Object is ( [] | undefined | null ) then return true
  */
 export function isArrayEmpty(array: Array<any> | undefined | null) {
-  return array === undefined || array === null || array.length === 0
+  return isUndefindOrNull(array) || array.length === 0
+}
+
+export function isUndefindOrNull(some: any) {
+  return some === undefined || some === null
 }

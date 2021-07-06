@@ -1,15 +1,4 @@
-class Observable<T> {
-  _value: T
-  constructor(data: T) {
-    this._value = data
-  }
-  get value() {
-    return this._value
-  }
-  set value(newValue) {
-    this._value = newValue
-  }
-}
+import { isUndefindOrNull } from '../lib'
 
 export interface Detail {
   stateName: string
@@ -29,21 +18,21 @@ export class State {
   constructor(context: Record<string, any>) {
     const _data: Record<string, any> = {}
     Object.entries(context || {}).forEach(([k, v]) => {
-      _data[k] = new Observable(v)
+      _data[k] = v
     })
     return new Proxy(_data, {
       get(target, prop) {
         const data = target[prop.toString()]
-        if (data) {
-          return target[prop.toString()].value
+        if (!isUndefindOrNull(data)) {
+          return target[prop.toString()]
         } else {
           console.error(`${prop.toString()} is not a registered state.`)
           return undefined
         }
       },
       set(target, prop, value) {
-        if (target[prop.toString()]) {
-          target[prop.toString()].value = value
+        if (!isUndefindOrNull(target[prop.toString()])) {
+          target[prop.toString()] = value
           detail.stateName = prop.toString()
           detail.stateValue = value
           document.dispatchEvent(StateUpdated)

@@ -2,11 +2,10 @@ import { State } from './State'
 import { compile } from 'handlebars'
 import { isObjectEmpty } from '../lib'
 import { paramCase } from 'param-case'
-import cheerio, { CheerioAPI, Element } from 'cheerio'
 
-type Method = (component: Component) => void
+type Method = (state: State) => void
 
-export const methodMap = {}
+const nameHash = {}
 
 interface Configuration {
   name: string
@@ -22,14 +21,11 @@ export class Component {
   state: State
   components: Record<string, Component> = {}
   methods: Record<string, Method> = {}
-  $: CheerioAPI
-  inputList: {
-    modelName: string
-    modelEl: Element
-  }[]
+  wrapper: HTMLElement
   constructor(source: string, configuration?: Configuration) {
     // Set the name
-    while (methodMap[(this.name = makeid(10))]) {}
+    while (nameHash[(this.name = makeid(10))]) {}
+    nameHash[this.name] = true
     // Set the source
     this.source = source
     // Set the states
@@ -44,10 +40,6 @@ export class Component {
     if (!isObjectEmpty(configuration?.methods)) {
       for (const [k, v] of Object.entries(configuration.methods)) {
         this.methods[k] = v
-        if (!methodMap[this.name]) {
-          methodMap[this.name] = {}
-        }
-        methodMap[this.name][k] = v.bind(this, this.state)
       }
     }
   }
@@ -56,7 +48,7 @@ export class Component {
    * @param {Prop[]} props optional
    * @returns {string}
    */
-  compile(props?: Record<string, any>): CheerioAPI {
+  compile(props?: Record<string, any>): void {
     // Assign states and props.
     let context = Object.assign({}, this.state)
     if (props) {
@@ -66,34 +58,22 @@ export class Component {
     }
     // Compile context.
     const contextCompiled = compile(this.source)(context)
+    // Create Element
+    const tmp = document.createElement('div')
+    tmp.innerHTML = contextCompiled
+    this.wrapper = tmp.firstElementChild as HTMLElement
     // Replace child components.
-    this.$ = cheerio.load(contextCompiled)
-    Object.entries(this.components).forEach(([k, v]) => {
-      const node = this.$(k)
-      node.replaceWith(v.compile(node.attr()).html())
-    })
-    // Event Mapping
-    Object.entries(this.methods).forEach(([k]) => {
-      const nodes = this.$(`[@click=${k}]`)
-      nodes.each((i, el) => {
-        this.$(el).attr('onclick', `Twoway.methodMap['${this.name}']['${k}']()`)
-        this.$(el).removeAttr('@click')
-      })
-    })
-    // Two-way Binding
-    Object.entries(this.state).forEach(([k, v]) => {
-      const nodes = this.$(`input[t-model=${k}]`)
-      this.inputList = []
-      nodes.each((i, el) => {
-        this.$(el).val(v)
-        this.inputList.push({
-          modelName: el.attribs['t-model'],
-          modelEl: el,
+    Object.entries(this.components).forEach(([k, childComponent]) => {
+      const elements = this.wrapper.querySelectorAll(k)
+      elements.forEach(el => {
+        const props = {}
+        Object.values(el.attributes).forEach(attr => {
+          props[attr.name] = attr.value
         })
+        childComponent.compile(props)
+        el.replaceWith(childComponent.wrapper)
       })
     })
-    // return CheerioAPI
-    return this.$
   }
 }
 
