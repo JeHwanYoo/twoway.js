@@ -75,14 +75,12 @@ export class Component {
           gEventBus.on('StateUpdate', (state: Detail) => {
             const hasState = new RegExp(`{{\\s*${state.stateName}\\s*}}`, 'g')
             if (hasState.exec(el.origin.innerHTML)) {
-              console.log(el.origin.innerHTML, state.stateName)
               const newCompiled = compile(el.origin.innerHTML)(this.state)
               el.current.innerHTML = newCompiled
             }
             hasState.lastIndex = 0
           })
-        }
-        if (hasPropInterpolation.exec(el.origin.innerHTML)) {
+        } else if (hasPropInterpolation.exec(el.origin.innerHTML)) {
           gEventBus.on(
             `PropsUpdate-${this.name}`,
             (props: Record<string, any>) => {
@@ -92,6 +90,8 @@ export class Component {
           )
         }
       }
+      hasInerpolation.lastIndex = 0
+      hasPropInterpolation.lastIndex = 0
       Object.values(el.origin.attributes).forEach(attr => {
         if (hasInerpolation.exec(attr.value)) {
           gEventBus.on('StateUpdate', (state: Detail) => {
@@ -105,22 +105,19 @@ export class Component {
               Object.values(el.current.attributes).forEach(attr => {
                 props['$' + attr.name] = attr.value
               })
-              gEventBus.emit(
-                `PropsUpdate-${
-                  this.components[el.origin.tagName.toLocaleLowerCase()].name
-                }`,
-                props,
-              )
-              el.current.replaceWith(
-                this.components[el.origin.tagName.toLocaleLowerCase()].wrapper,
-              )
+              const childComponent =
+                this.components[el.origin.tagName.toLocaleLowerCase()]
+              props['eventName'] = childComponent.name
+              gEventBus.emit(`PropsUpdate-${props['eventName']}`, props)
+              const clone = childComponent.wrapper.cloneNode(true)
+              el.current.replaceWith(clone)
+              el.current = clone as Element
             }
             hasState.lastIndex = 0
           })
         }
       })
       hasInerpolation.lastIndex = 0
-      hasPropInterpolation.lastIndex = 0
     })
     // initialize interpolation
     Object.entries(this.state).forEach(([k, v]) => {
