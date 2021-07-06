@@ -156,11 +156,13 @@ You can change the state with the value of the input using the t-model property.
 
 ## Test
 
+<img src="https://i.ibb.co/54X7gdG/2021-07-07-5-12-16.gif" alt="2021-07-07-5-12-16" border="0">
+
 Although it has not been officially distributed yet, you can clone this project and test it by running `npm run dev`. See `test/example.js`.
 
 ## Known Issues
 
-There is no implemented event other than the onclick event. (`@click`)
+There is no implemented event other than the onclick event. (`t-click`)
 
 It has not been tested whether the two-way binding works correctly for various input types.
 
