@@ -50,6 +50,10 @@ Props is a one-way data binding. The parent component passes it to the child com
 
 Props uses a '$' symbol to distinguish them from common models.
 
+t-attribute is a two-way.js grammar. (ex, t-click, t-model)
+
+Usually, other frameworks seem to be called directives.
+
 ```javascript
 const Counter = new Component(
   `
@@ -61,8 +65,8 @@ const application = new Component(
   `
     <counter count="{{ count }}"></counter>
     <div>
-      <button @click="minusCount">minus count</button>
-      <button @click="plusCount">plus count</button>
+      <button t-click="minusCount">minus count</button>
+      <button t-click="plusCount">plus count</button>
     </div>
   `,
   {
@@ -101,8 +105,6 @@ This is the way to update the ViewModel from the View. Of course, props cannot b
 Although it has not been officially distributed yet, you can clone this project and test it by running `npm run dev`. See `test/example.js`.
 
 ## Known Issues
-
-// Vue.js doesn't recompile the whole thing for one change. However, Twoway.js compiles the entire DOM at 0.0.1alpha.
 
 There is no implemented event other than the onclick event. (`@click`)
 

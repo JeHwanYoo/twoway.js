@@ -1,18 +1,10 @@
 import { isUndefindOrNull } from '../lib'
+import { gEventBus } from '../lib'
 
 export interface Detail {
   stateName: string
   stateValue: any
 }
-
-const detail: Detail = {
-  stateName: '',
-  stateValue: null,
-}
-
-const StateUpdated = new CustomEvent('StateUpdated', {
-  detail,
-})
 
 export class State {
   constructor(context: Record<string, any>) {
@@ -33,9 +25,10 @@ export class State {
       set(target, prop, value) {
         if (!isUndefindOrNull(target[prop.toString()])) {
           target[prop.toString()] = value
-          detail.stateName = prop.toString()
-          detail.stateValue = value
-          document.dispatchEvent(StateUpdated)
+          gEventBus.emit('StateUpdate', {
+            stateName: prop.toString(),
+            stateValue: value,
+          } as Detail)
           return true
         } else {
           console.error(`${prop.toString()} is not a registered state.`)

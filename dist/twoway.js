@@ -1,4 +1,19 @@
-(function(g,f){typeof exports==='object'&&typeof module!=='undefined'?f(exports,require('fs')):typeof define==='function'&&define.amd?define(['exports','fs'],f):(g=typeof globalThis!=='undefined'?globalThis:g||self,f(g.Twoway={},g.fs));}(this,(function(exports, require$$2){'use strict';function _interopDefaultLegacy(e){return e&&typeof e==='object'&&'default'in e?e:{'default':e}}var require$$2__default=/*#__PURE__*/_interopDefaultLegacy(require$$2);/**
+(function(g,f){typeof exports==='object'&&typeof module!=='undefined'?f(exports,require('fs')):typeof define==='function'&&define.amd?define(['exports','fs'],f):(g=typeof globalThis!=='undefined'?globalThis:g||self,f(g.Twoway={},g.fs));}(this,(function(exports, require$$2){'use strict';function _interopDefaultLegacy(e){return e&&typeof e==='object'&&'default'in e?e:{'default':e}}var require$$2__default=/*#__PURE__*/_interopDefaultLegacy(require$$2);class EventBus {
+    record = {};
+    on(eventname, callback) {
+        if (!this.record[eventname])
+            this.record[eventname] = [];
+        this.record[eventname].push(callback);
+    }
+    emit(eventname, ...params) {
+        this.record[eventname]?.forEach(cb => cb(...params));
+    }
+    remove(eventname, callback) {
+        const idx = this.record[eventname].findIndex(cb => cb === callback);
+        this.record[eventname]?.splice(idx, 1);
+    }
+}
+const gEventBus = new EventBus();/**
  *
  * @param { Object | undefined | null } object
  * @returns { boolean } if Object is ( {} | undefined | null ) then return true
@@ -9,14 +24,7 @@ function isObjectEmpty(object) {
 }
 function isUndefindOrNull(some) {
     return some === undefined || some === null;
-}const detail = {
-    stateName: '',
-    stateValue: null,
-};
-const StateUpdated = new CustomEvent('StateUpdated', {
-    detail,
-});
-class State {
+}class State {
     constructor(context) {
         const _data = {};
         Object.entries(context || {}).forEach(([k, v]) => {
@@ -36,9 +44,10 @@ class State {
             set(target, prop, value) {
                 if (!isUndefindOrNull(target[prop.toString()])) {
                     target[prop.toString()] = value;
-                    detail.stateName = prop.toString();
-                    detail.stateValue = value;
-                    document.dispatchEvent(StateUpdated);
+                    gEventBus.emit('StateUpdate', {
+                        stateName: prop.toString(),
+                        stateValue: value,
+                    });
                     return true;
                 }
                 else {
@@ -8047,6 +8056,7 @@ class Component {
     components = {};
     methods = {};
     wrapper;
+    elementList = [];
     constructor(source, configuration) {
         // Set the name
         while (nameHash[(this.name = makeid(10))]) { }
@@ -8067,36 +8077,97 @@ class Component {
                 this.methods[k] = v;
             }
         }
-    }
-    /**
-     *
-     * @param {Prop[]} props optional
-     * @returns {string}
-     */
-    compile(props) {
-        // Assign states and props.
-        let context = Object.assign({}, this.state);
-        if (props) {
-            Object.entries(props).forEach(([k, v]) => {
-                context[`$${k}`] = v;
-            });
-        }
-        // Compile context.
-        const contextCompiled = lib.compile(this.source)(context);
         // Create Element
         const tmp = document.createElement('div');
-        tmp.innerHTML = contextCompiled;
+        tmp.innerHTML = this.source;
         this.wrapper = tmp.firstElementChild;
-        // Replace child components.
-        Object.entries(this.components).forEach(([k, childComponent]) => {
-            const elements = this.wrapper.querySelectorAll(k);
+        tmp.appendChild(this.wrapper.cloneNode(true));
+        this.elementList.push({
+            origin: tmp.lastElementChild,
+            current: this.wrapper,
+        });
+        this.wrapper.querySelectorAll('*').forEach(el => {
+            const tmp = document.createElement('div');
+            tmp.appendChild(el.cloneNode(true));
+            this.elementList.push({
+                origin: tmp.children[0],
+                current: el,
+            });
+        });
+        // One-way Binding
+        const hasInerpolation = new RegExp(`{{\\s*\\w+\\s*}}`, 'g');
+        const hasPropInterpolation = new RegExp(`{{\\s*\\$\\w+\\s*}}`, 'g');
+        this.elementList.forEach(el => {
+            if (el.origin.children.length === 0) {
+                if (hasInerpolation.exec(el.origin.innerHTML)) {
+                    gEventBus.on('StateUpdate', (state) => {
+                        const hasState = new RegExp(`{{\\s*${state.stateName}\\s*}}`, 'g');
+                        if (hasState.exec(el.origin.innerHTML)) {
+                            console.log(el.origin.innerHTML, state.stateName);
+                            const newCompiled = lib.compile(el.origin.innerHTML)(this.state);
+                            el.current.innerHTML = newCompiled;
+                        }
+                        hasState.lastIndex = 0;
+                    });
+                }
+                if (hasPropInterpolation.exec(el.origin.innerHTML)) {
+                    gEventBus.on(`PropsUpdate-${this.name}`, (props) => {
+                        const newCompiled = lib.compile(el.origin.innerHTML)(props);
+                        el.current.innerHTML = newCompiled;
+                    });
+                }
+            }
+            Object.values(el.origin.attributes).forEach(attr => {
+                if (hasInerpolation.exec(attr.value)) {
+                    gEventBus.on('StateUpdate', (state) => {
+                        const hasState = new RegExp(`{{\\s*${state.stateName}\\s*}}`, 'g');
+                        if (hasState.exec(attr.value)) {
+                            const context = {};
+                            context[state.stateName] = state.stateValue;
+                            const newCompiled = lib.compile(attr.value)(context);
+                            el.current.setAttribute(attr.name, newCompiled);
+                            const props = {};
+                            Object.values(el.current.attributes).forEach(attr => {
+                                props['$' + attr.name] = attr.value;
+                            });
+                            gEventBus.emit(`PropsUpdate-${this.components[el.origin.tagName.toLocaleLowerCase()].name}`, props);
+                            el.current.replaceWith(this.components[el.origin.tagName.toLocaleLowerCase()].wrapper);
+                        }
+                        hasState.lastIndex = 0;
+                    });
+                }
+            });
+            hasInerpolation.lastIndex = 0;
+            hasPropInterpolation.lastIndex = 0;
+        });
+        // initialize interpolation
+        Object.entries(this.state).forEach(([k, v]) => {
+            gEventBus.emit('StateUpdate', {
+                stateName: k,
+                stateValue: v,
+            });
+        });
+        // Two-way Binding
+        Object.entries(this.state).forEach(([k, v]) => {
+            const elements = this.wrapper.querySelectorAll(`input[t-model=${k}]`);
             elements.forEach(el => {
-                const props = {};
-                Object.values(el.attributes).forEach(attr => {
-                    props[attr.name] = attr.value;
+                el.addEventListener('input', () => {
+                    const input = el;
+                    this.state[k] = input.value;
                 });
-                childComponent.compile(props);
-                el.replaceWith(childComponent.wrapper);
+                const input = el;
+                input.value = v;
+                el.removeAttribute('t-model');
+            });
+        });
+        // Method Binding
+        Object.entries(this.methods).forEach(([k, v]) => {
+            const elements = this.wrapper.querySelectorAll(`[t-click=${k}]`);
+            elements.forEach(el => {
+                el.addEventListener('click', () => {
+                    v(this.state);
+                });
+                el.removeAttribute('t-click');
             });
         });
     }
@@ -8114,46 +8185,8 @@ function makeid(length) {
     constructor(rootComponent) {
         this.rootComponent = rootComponent;
         document.addEventListener('DOMContentLoaded', () => this.start());
-        document.addEventListener('StateUpdated', evt => this.update(evt.detail));
     }
     start() {
-        this.rootComponent.compile();
         document.body.appendChild(this.rootComponent.wrapper);
-        // Method Binding
-        Object.entries(this.rootComponent.methods).forEach(([k, v]) => {
-            const elements = document.querySelectorAll(`[t-click=${k}]`);
-            elements.forEach(el => {
-                el.addEventListener('click', () => {
-                    v(this.rootComponent.state);
-                });
-                el.removeAttribute('t-click');
-            });
-        });
-        // Two-way Binding
-        Object.entries(this.rootComponent.state).forEach(([k, v]) => {
-            const elements = document.querySelectorAll(`input[t-model=${k}]`);
-            elements.forEach(el => {
-                el.addEventListener('input', () => {
-                    const input = el;
-                    this.rootComponent.state[k] = input.value;
-                });
-                const input = el;
-                input.value = v;
-                el.removeAttribute('t-model');
-            });
-        });
-    }
-    update(detail) {
-        // document.querySelectorAll('body *').forEach(v => {
-        // if (v.children.length === 0) {
-        // const tmp = document.createElement('div')
-        // tmp.appendChild(v.cloneNode(false))
-        // console.log(v, v.innerHTML, interpolation.exec(v.innerHTML))
-        // if (interpolation.exec(v.innerHTML)) {
-        //   const compiled = compile(v.innerHTML)(this.rootComponent.state)
-        //   console.log(compiled)
-        // }
-        // }
-        // })
     }
 }exports.Component=Component;exports.Renderer=Renderer;exports.State=State;Object.defineProperty(exports,'__esModule',{value:true});})));//# sourceMappingURL=twoway.js.map
