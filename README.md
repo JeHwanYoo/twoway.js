@@ -156,7 +156,7 @@ You can change the state with the value of the input using the t-model property.
 
 ## Test
 
-<img src="https://i.ibb.co/54X7gdG/2021-07-07-5-12-16.gif" alt="2021-07-07-5-12-16" border="0">
+https://user-images.githubusercontent.com/13535954/124662353-af01b800-dee3-11eb-8aea-5d68b51c7f66.mov
 
 Although it has not been officially distributed yet, you can clone this project and test it by running `npm run dev`. See `test/example.js`.
 
